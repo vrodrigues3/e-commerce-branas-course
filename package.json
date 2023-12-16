@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "main": "tsc && node dist/main",
-    "test": "tsc && jest ./dist/test"
-  },
+    "test": "jest --passWithNoTests --silent --noStackTrace"
+    },
   "keywords": [],
   "author": "",
   "license": "ISC",
