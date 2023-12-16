@@ -1,17 +1,5 @@
 // @ts-nocheck
 
-export function validateCpf (rawCpf) {
-    if (!rawCpf) return false;
-    const cleanCpf = rawCpf.replace(/\D/g,"") 
-    if (isInvalidLength(cleanCpf)) return false;
-    if (allDigitsEqual(cleanCpf)) return false;  
-    const digit1 = calculateDigit(cleanCpf,10)
-    const digit2 = calculateDigit(cleanCpf,11)
-    const actualDigit = extractDigits(cleanCpf); 
-    const validateDigit = `${digit1}${digit2}`;  
-    return actualDigit == validateDigit;   
-} 
-
 function calculateDigit (cpf: string, factor: number) {
     let total = 0;
     for (const digit of cpf) {
@@ -33,6 +21,18 @@ function allDigitsEqual (cpf: string) {
 function extractDigits (cpf: string) {
     return cpf.slice(9); 
 }
+
+export function validateCpf (rawCpf) {
+    if (!rawCpf) return false;
+    const cleanCpf = rawCpf.replace(/\D/g,"") 
+    if (isInvalidLength(cleanCpf)) return false;
+    if (allDigitsEqual(cleanCpf)) return false;  
+    const digit1 = calculateDigit(cleanCpf,10)
+    const digit2 = calculateDigit(cleanCpf,11)
+    const actualDigit = extractDigits(cleanCpf); 
+    const validateDigit = `${digit1}${digit2}`;  
+    return actualDigit == validateDigit;   
+} 
 
 
 	
