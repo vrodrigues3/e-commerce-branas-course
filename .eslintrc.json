@@ -1,0 +1,62 @@
+{
+    "plugins": [
+      "@typescript-eslint",
+      "unused-imports",
+      "eslint-plugin-import-helpers"
+    ],
+    "extends": [
+      "eslint:recommended",
+      "plugin:@typescript-eslint/eslint-recommended",
+      "plugin:@typescript-eslint/recommended",
+      "standard-with-typescript",
+      "plugin:prettier/recommended"
+    ],
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+      "project": "./tsconfig.json"
+    },
+    "overrides": [
+      {
+        "files": ["*schema.ts"],
+        "rules": {
+          "@typescript-eslint/explicit-function-return-type": "off"
+        }
+      },
+      {
+        "files": ["src/main/routes/**/*routes.ts"],
+        "rules": {
+          "@typescript-eslint/no-misused-promises": "off"
+        }
+      }
+    ],
+    "rules": {
+      "@typescript-eslint/camelcase": "off",
+      "@typescript-eslint/strict-boolean-expressions": "off",
+      "@typescript-eslint/consistent-type-definitions": "off",
+      "@typescript-eslint/restrict-template-expressions": "off",
+      "@typescript-eslint/no-namespace": "off",
+      "sort-imports": [
+        "error",
+        {
+          "ignoreCase": false,
+          "ignoreDeclarationSort": true,
+          "ignoreMemberSort": false,
+          "memberSyntaxSortOrder": ["none", "all", "single", "multiple"],
+          "allowSeparatedGroups": false
+        }
+      ],
+      "@typescript-eslint/no-unnecessary-boolean-literal-compare": "off",
+      "no-unused-vars": "off",
+      "unused-imports/no-unused-imports": "error",
+      "unused-imports/no-unused-vars": [
+        "warn",
+        {
+          "vars": "all",
+          "varsIgnorePattern": "^_",
+          "args": "none",
+          "argsIgnorePattern": "^_"
+        }
+      ]
+    }
+  }
+  
