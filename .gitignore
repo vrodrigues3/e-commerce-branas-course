@@ -4,6 +4,7 @@ package-lock.json
 
 .env
 
+prisma/dev.db
 
 yarn.lock
 yarn-error.log
