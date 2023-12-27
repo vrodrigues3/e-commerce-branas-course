@@ -8,12 +8,17 @@ datasource db {
 }
 
 model Product {
-  id          Int    @id @default(autoincrement())
+  id          Int    @id @unique
   description String
   price       Int
+  width       Int
+  height      Int
+  length      Int
+  weight      Float
 }
 
 model Coupon {
   code String @unique
   percentage Int
+  expireDate DateTime
 }
