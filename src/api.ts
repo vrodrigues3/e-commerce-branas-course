@@ -14,15 +14,33 @@ app.post('/checkout', async (req, res) => {
   }
 
   let total = 0
+  let freight = 0
+
+  const products: number[] = []
 
   for (const item of req.body.items) {
     try {
+      if (products.some((idProduct) => idProduct === item.idProduct)) {
+        return res.status(422).json({ message: 'Duplicated product' })
+      }
+      products.push(item?.idProduct)
       const product = await prisma.product.findUnique({
         where: { id: item.idProduct }
       })
 
       if (product) {
+        if (item.quantity <= 0) {
+          return res.status(422).json({ message: 'Quantity must be positive' })
+        }
+
         total += product.price * item.quantity
+        const volume =
+          (product.width / 100) *
+          (product.height / 100) *
+          (product.length / 100)
+        const density = product.weight / volume
+        const itemFreight = 1000 * volume * (density / 100)
+        freight += itemFreight >= 10 ? itemFreight : 10
       } else {
         return res.status(422).json({ message: 'Product not found' })
       }
@@ -36,10 +54,13 @@ app.post('/checkout', async (req, res) => {
     const coupon = await prisma.coupon.findFirst({
       where: { code: req.body.coupon }
     })
-    if (coupon) {
+    const today = new Date()
+    if (coupon && coupon.expireDate.getTime() > today.getTime()) {
       total -= (total * coupon.percentage) / 100
     }
   }
+
+  total += freight
 
   res.json({ total })
 })
