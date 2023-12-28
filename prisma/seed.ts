@@ -53,7 +53,7 @@ async function main() {
       width: 30,
       length: 10,
       weight: 3,
-      currency: 'BRL'
+      currency: 'USD'
     }
   })
 
