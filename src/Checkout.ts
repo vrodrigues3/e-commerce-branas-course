@@ -1,9 +1,13 @@
 import { CouponData } from './CouponData'
+import { CurrencyGateway } from './CurrencyGateway'
+import { CurrencyGatewayRandom } from './CurrencyGatewayRandom'
+import { MailerConsole } from './MailerConsole'
 import { ProductData } from './ProductData'
 import { validate } from './cpfValidator'
 
 type Input = {
   cpf: string
+  email?: string
   items: {
     idProduct: number
     quantity: number
@@ -14,7 +18,9 @@ type Input = {
 export class Checkout {
   constructor(
     readonly productData: ProductData,
-    readonly couponData: CouponData
+    readonly couponData: CouponData,
+    readonly currencyGateway: CurrencyGateway = new CurrencyGatewayRandom(),
+    readonly mailer: MailerConsole = new MailerConsole()
   ) {}
 
   async execute(input: Input) {
@@ -25,21 +31,23 @@ export class Checkout {
 
     let total = 0
     let freight = 0
+    const currencies: any = await this.currencyGateway.getCurrencies()
 
-    const products: number[] = []
+    const productsIds: number[] = []
 
     for (const item of input.items) {
-      if (products.some((idProduct) => idProduct === item.idProduct)) {
+      if (productsIds.some((idProduct) => idProduct === item.idProduct)) {
         throw new Error('Duplicated product')
       }
-      products.push(item?.idProduct)
+      productsIds.push(item?.idProduct)
       const product = await this.productData.getProduct(item.idProduct)
       if (product) {
         if (item.quantity <= 0) {
           throw new Error('Quantity must be positive')
         }
 
-        total += product.price * item.quantity
+        total +=
+          product.price * (currencies[product.currency] || 1) * item.quantity
         const volume =
           (product.width / 100) *
           (product.height / 100) *
@@ -59,7 +67,13 @@ export class Checkout {
         total -= (total * coupon.percentage) / 100
       }
     }
-
+    if (input.email) {
+      this.mailer.send(
+        input.email,
+        'Checkout Success',
+        'Your Purchase was successfully completed'
+      )
+    }
     total += freight
 
     return { total }
