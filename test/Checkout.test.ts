@@ -1,6 +1,14 @@
 import { Checkout } from '../src/Checkout'
 import { CouponData } from '../src/CouponData'
+import { CurrencyGatewayRandom } from '../src/CurrencyGatewayRandom'
 import { ProductData } from '../src/ProductData'
+import sinon from 'sinon'
+import { ProductDataDatabase } from '../src/ProductDataDatabase'
+import { CouponDataDatabase } from '../src/CouponDataDatabase'
+import { MailerConsole } from '../src/MailerConsole'
+import { CurrencyGateway } from '../src/CurrencyGateway'
+import { Mailer } from '../src/Mailer'
+
 test('should make an order with 3 products', async () => {
   const input = {
     cpf: '168.995.350-09',
@@ -65,4 +73,311 @@ test('should make an order with 3 products', async () => {
   const checkout = new Checkout(productData, couponData)
   const output = await checkout.execute(input)
   expect(output.total).toBe(1240)
+})
+
+test('should make an order with 4 products and different currencies', async () => {
+  const currencyGatewayStub = sinon
+    .stub(CurrencyGatewayRandom.prototype, 'getCurrencies')
+    .resolves({
+      USD: 2,
+      BRL: 1
+    })
+  const mailerSpy = sinon.spy(MailerConsole.prototype, 'send')
+  const input = {
+    cpf: '168.995.350-09',
+    email: 'vinicius@test.com',
+    items: [
+      { idProduct: 1, quantity: 2 },
+      { idProduct: 2, quantity: 1 },
+      { idProduct: 3, quantity: 3 },
+      { idProduct: 4, quantity: 1 }
+    ]
+  }
+  const productData: ProductData = {
+    async getProduct(idProduct: number): Promise<any> {
+      const products: { [idProduct: number]: any } = {
+        1: {
+          id: 1,
+          description: 'A',
+          price: 100,
+          height: 100,
+          width: 30,
+          length: 10,
+          weight: 3,
+          currency: 'BRL'
+        },
+        2: {
+          id: 2,
+          description: 'B',
+          price: 200,
+          height: 50,
+          width: 50,
+          length: 50,
+          weight: 20,
+          currency: 'BRL'
+        },
+        3: {
+          id: 3,
+          description: 'C',
+          price: 200,
+          height: 10,
+          width: 10,
+          length: 10,
+          weight: 0.9,
+          currency: 'BRL'
+        },
+        4: {
+          id: 4,
+          description: 'D',
+          price: 100,
+          height: 100,
+          width: 30,
+          length: 10,
+          weight: 3,
+          currency: 'USD'
+        }
+      }
+      //
+      return products[idProduct]
+    }
+  }
+  const couponData: CouponData = {
+    async getCoupon(code): Promise<any> {
+      const coupons: { [code: string]: any } = {
+        VALE20: {
+          code: 'VALE20',
+          percentage: 20,
+          expireDate: new Date('2023-12-31')
+        },
+        VALE20_EXPIRED: {
+          code: 'VALE20_EXPIRED',
+          percentage: 20,
+          expireDate: new Date('2023-10-31')
+        }
+      }
+      return coupons[code]
+    }
+  }
+  // const productData = new ProductDataDatabase()
+  // const couponData = new CouponDataDatabase()
+  const checkout = new Checkout(productData, couponData)
+  const output = await checkout.execute(input)
+  expect(output.total).toBe(1470)
+  expect(mailerSpy.calledOnce).toBeTruthy()
+  expect(
+    mailerSpy.calledWith(
+      'vinicius@test.com',
+      'Checkout Success',
+      'Your Purchase was successfully completed'
+    )
+  ).toBeTruthy()
+  currencyGatewayStub.restore()
+  mailerSpy.restore()
+})
+
+test('should make an order with 4 products and different currencies with mock', async () => {
+  const currencyGatewayMock = sinon.mock(CurrencyGatewayRandom.prototype)
+  currencyGatewayMock.expects('getCurrencies').once().resolves({
+    USD: 2,
+    BRL: 1
+  })
+  const mailerMock = sinon.mock(MailerConsole.prototype)
+  mailerMock
+    .expects('send')
+    .once()
+    .withArgs(
+      'vinicius@test.com',
+      'Checkout Success',
+      'Your Purchase was successfully completed'
+    )
+  const input = {
+    cpf: '168.995.350-09',
+    email: 'vinicius@test.com',
+    items: [
+      { idProduct: 1, quantity: 2 },
+      { idProduct: 2, quantity: 1 },
+      { idProduct: 3, quantity: 3 },
+      { idProduct: 4, quantity: 1 }
+    ]
+  }
+  const productData: ProductData = {
+    async getProduct(idProduct: number): Promise<any> {
+      const products: { [idProduct: number]: any } = {
+        1: {
+          id: 1,
+          description: 'A',
+          price: 100,
+          height: 100,
+          width: 30,
+          length: 10,
+          weight: 3,
+          currency: 'BRL'
+        },
+        2: {
+          id: 2,
+          description: 'B',
+          price: 200,
+          height: 50,
+          width: 50,
+          length: 50,
+          weight: 20,
+          currency: 'BRL'
+        },
+        3: {
+          id: 3,
+          description: 'C',
+          price: 200,
+          height: 10,
+          width: 10,
+          length: 10,
+          weight: 0.9,
+          currency: 'BRL'
+        },
+        4: {
+          id: 4,
+          description: 'D',
+          price: 100,
+          height: 100,
+          width: 30,
+          length: 10,
+          weight: 3,
+          currency: 'USD'
+        }
+      }
+      return products[idProduct]
+    }
+  }
+  const couponData: CouponData = {
+    async getCoupon(code): Promise<any> {
+      const coupons: { [code: string]: any } = {
+        VALE20: {
+          code: 'VALE20',
+          percentage: 20,
+          expireDate: new Date('2023-12-31')
+        },
+        VALE20_EXPIRED: {
+          code: 'VALE20_EXPIRED',
+          percentage: 20,
+          expireDate: new Date('2023-10-31')
+        }
+      }
+      return coupons[code]
+    }
+  }
+  // const productData = new ProductDataDatabase()
+  // const couponData = new CouponDataDatabase()
+  const checkout = new Checkout(productData, couponData)
+  const output = await checkout.execute(input)
+  expect(output.total).toBe(1470)
+
+  mailerMock.verify()
+  mailerMock.restore()
+  currencyGatewayMock.verify()
+  currencyGatewayMock.restore()
+})
+
+test('should make an order with 4 products and different currencies with fake', async () => {
+  const input = {
+    cpf: '168.995.350-09',
+    email: 'vinicius@test.com',
+    items: [
+      { idProduct: 1, quantity: 2 },
+      { idProduct: 2, quantity: 1 },
+      { idProduct: 3, quantity: 3 },
+      { idProduct: 4, quantity: 1 }
+    ]
+  }
+  const productData: ProductData = {
+    async getProduct(idProduct: number): Promise<any> {
+      const products: { [idProduct: number]: any } = {
+        1: {
+          id: 1,
+          description: 'A',
+          price: 100,
+          height: 100,
+          width: 30,
+          length: 10,
+          weight: 3,
+          currency: 'BRL'
+        },
+        2: {
+          id: 2,
+          description: 'B',
+          price: 200,
+          height: 50,
+          width: 50,
+          length: 50,
+          weight: 20,
+          currency: 'BRL'
+        },
+        3: {
+          id: 3,
+          description: 'C',
+          price: 200,
+          height: 10,
+          width: 10,
+          length: 10,
+          weight: 0.9,
+          currency: 'BRL'
+        },
+        4: {
+          id: 4,
+          description: 'D',
+          price: 100,
+          height: 100,
+          width: 30,
+          length: 10,
+          weight: 3,
+          currency: 'USD'
+        }
+      }
+      //
+      return products[idProduct]
+    }
+  }
+  const couponData: CouponData = {
+    async getCoupon(code): Promise<any> {
+      const coupons: { [code: string]: any } = {
+        VALE20: {
+          code: 'VALE20',
+          percentage: 20,
+          expireDate: new Date('2023-12-31')
+        },
+        VALE20_EXPIRED: {
+          code: 'VALE20_EXPIRED',
+          percentage: 20,
+          expireDate: new Date('2023-10-31')
+        }
+      }
+      return coupons[code]
+    }
+  }
+  // const productData = new ProductDataDatabase()
+  // const couponData = new CouponDataDatabase()
+  const currencyGateway: CurrencyGateway = {
+    async getCurrencies(): Promise<any> {
+      return {
+        USD: 2,
+        BRL: 1
+      }
+    }
+  }
+  const log: { to: string; subject: string; message: string }[] = []
+  const mailer: Mailer = {
+    async send(to: string, subject: string, message: string): Promise<void> {
+      log.push({ to, subject, message })
+    }
+  }
+  const checkout = new Checkout(
+    productData,
+    couponData,
+    currencyGateway,
+    mailer
+  )
+  const output = await checkout.execute(input)
+  expect(output.total).toBe(1470)
+  expect(log).toHaveLength(1)
+  expect(log[0].to).toBe('vinicius@test.com')
+  expect(log[0].subject).toBe('Checkout Success')
+  expect(log[0].message).toBe('Your Purchase was successfully completed')
 })
