@@ -13,7 +13,8 @@ async function main() {
       height: 100,
       width: 30,
       length: 10,
-      weight: 3
+      weight: 3,
+      currency: 'BRL'
     }
   })
 
@@ -25,7 +26,8 @@ async function main() {
       height: 50,
       width: 50,
       length: 50,
-      weight: 20
+      weight: 20,
+      currency: 'BRL'
     }
   })
 
@@ -37,7 +39,21 @@ async function main() {
       height: 10,
       width: 10,
       length: 10,
-      weight: 0.9
+      weight: 0.9,
+      currency: 'BRL'
+    }
+  })
+
+  await prisma.product.create({
+    data: {
+      id: 4,
+      description: 'D',
+      price: 100,
+      height: 100,
+      width: 30,
+      length: 10,
+      weight: 3,
+      currency: 'BRL'
     }
   })
 

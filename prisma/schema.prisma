@@ -15,6 +15,7 @@ model Product {
   height      Int
   length      Int
   weight      Float
+  currency    String
 }
 
 model Coupon {
