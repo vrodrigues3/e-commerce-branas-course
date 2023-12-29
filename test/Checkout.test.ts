@@ -8,6 +8,7 @@ import { CouponDataDatabase } from '../src/CouponDataDatabase'
 import { MailerConsole } from '../src/MailerConsole'
 import { CurrencyGateway } from '../src/CurrencyGateway'
 import { Mailer } from '../src/Mailer'
+import { OrderData } from '../src/OrderData'
 
 test('should make an order with 3 products', async () => {
   const input = {
@@ -70,7 +71,14 @@ test('should make an order with 3 products', async () => {
       return coupons[code]
     }
   }
-  const checkout = new Checkout(productData, couponData)
+  const orderData: OrderData = {
+    async save(order: any): Promise<void> {},
+    async getByCpf(cpf: string): Promise<any> {},
+    async count(): Promise<number> {
+      return 1
+    }
+  }
+  const checkout = new Checkout(productData, couponData, orderData)
   const output = await checkout.execute(input)
   expect(output.total).toBe(1240)
 })
@@ -160,7 +168,14 @@ test('should make an order with 4 products and different currencies', async () =
   }
   // const productData = new ProductDataDatabase()
   // const couponData = new CouponDataDatabase()
-  const checkout = new Checkout(productData, couponData)
+  const orderData: OrderData = {
+    async save(order: any): Promise<void> {},
+    async getByCpf(cpf: string): Promise<any> {},
+    async count(): Promise<number> {
+      return 1
+    }
+  }
+  const checkout = new Checkout(productData, couponData, orderData)
   const output = await checkout.execute(input)
   expect(output.total).toBe(1470)
   expect(mailerSpy.calledOnce).toBeTruthy()
@@ -266,7 +281,14 @@ test('should make an order with 4 products and different currencies with mock', 
   }
   // const productData = new ProductDataDatabase()
   // const couponData = new CouponDataDatabase()
-  const checkout = new Checkout(productData, couponData)
+  const orderData: OrderData = {
+    async save(order: any): Promise<void> {},
+    async getByCpf(cpf: string): Promise<any> {},
+    async count(): Promise<number> {
+      return 1
+    }
+  }
+  const checkout = new Checkout(productData, couponData, orderData)
   const output = await checkout.execute(input)
   expect(output.total).toBe(1470)
 
@@ -368,9 +390,17 @@ test('should make an order with 4 products and different currencies with fake', 
       log.push({ to, subject, message })
     }
   }
+  const orderData: OrderData = {
+    async save(order: any): Promise<void> {},
+    async getByCpf(cpf: string): Promise<any> {},
+    async count(): Promise<number> {
+      return 1
+    }
+  }
   const checkout = new Checkout(
     productData,
     couponData,
+    orderData,
     currencyGateway,
     mailer
   )
@@ -380,4 +410,77 @@ test('should make an order with 4 products and different currencies with fake', 
   expect(log[0].to).toBe('vinicius@test.com')
   expect(log[0].subject).toBe('Checkout Success')
   expect(log[0].message).toBe('Your Purchase was successfully completed')
+})
+
+test('should make an order with 3 products with order code', async () => {
+  const input = {
+    cpf: '168.995.350-09',
+    items: [
+      { idProduct: 1, quantity: 2 },
+      { idProduct: 2, quantity: 1 },
+      { idProduct: 3, quantity: 3 }
+    ]
+  }
+  const productData: ProductData = {
+    async getProduct(idProduct: number): Promise<any> {
+      const products: { [idProduct: number]: any } = {
+        1: {
+          id: 1,
+          description: 'A',
+          price: 100,
+          height: 100,
+          width: 30,
+          length: 10,
+          weight: 3
+        },
+        2: {
+          id: 2,
+          description: 'B',
+          price: 200,
+          height: 50,
+          width: 50,
+          length: 50,
+          weight: 20
+        },
+        3: {
+          id: 3,
+          description: 'C',
+          price: 200,
+          height: 10,
+          width: 10,
+          length: 10,
+          weight: 0.9
+        }
+      }
+
+      return products[idProduct]
+    }
+  }
+  const couponData: CouponData = {
+    async getCoupon(code): Promise<any> {
+      const coupons: { [code: string]: any } = {
+        VALE20: {
+          code: 'VALE20',
+          percentage: 20,
+          expireDate: new Date('2023-12-31')
+        },
+        VALE20_EXPIRED: {
+          code: 'VALE20_EXPIRED',
+          percentage: 20,
+          expireDate: new Date('2023-10-31')
+        }
+      }
+      return coupons[code]
+    }
+  }
+  const orderData: OrderData = {
+    async save(order: any): Promise<void> {},
+    async getByCpf(cpf: string): Promise<any> {},
+    async count(): Promise<number> {
+      return 0
+    }
+  }
+  const checkout = new Checkout(productData, couponData, orderData)
+  const output = await checkout.execute(input)
+  expect(output.code).toBe('202300000001')
 })

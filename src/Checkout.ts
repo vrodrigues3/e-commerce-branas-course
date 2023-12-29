@@ -1,7 +1,10 @@
+import { Coupon } from './Coupon'
 import { CouponData } from './CouponData'
 import { CurrencyGateway } from './CurrencyGateway'
 import { CurrencyGatewayRandom } from './CurrencyGatewayRandom'
+import { FreightCalculator } from './FreightCalculator'
 import { MailerConsole } from './MailerConsole'
+import { OrderData } from './OrderData'
 import { ProductData } from './ProductData'
 import { validate } from './cpfValidator'
 
@@ -19,6 +22,7 @@ export class Checkout {
   constructor(
     readonly productData: ProductData,
     readonly couponData: CouponData,
+    readonly orderData: OrderData,
     readonly currencyGateway: CurrencyGateway = new CurrencyGatewayRandom(),
     readonly mailer: MailerConsole = new MailerConsole()
   ) {}
@@ -28,7 +32,6 @@ export class Checkout {
     if (!isValid) {
       throw new Error('Invalid cpf')
     }
-
     let total = 0
     let freight = 0
     const currencies: any = await this.currencyGateway.getCurrencies()
@@ -48,23 +51,21 @@ export class Checkout {
 
         total +=
           product.price * (currencies[product.currency] || 1) * item.quantity
-        const volume =
-          (product.width / 100) *
-          (product.height / 100) *
-          (product.length / 100)
-        const density = product.weight / volume
-        const itemFreight = 1000 * volume * (density / 100)
-        freight += itemFreight >= 10 ? itemFreight : 10
+        freight += FreightCalculator.calculate(product)
       } else {
         throw new Error('Product not found')
       }
     }
 
     if (input.coupon) {
-      const coupon = await this.couponData.getCoupon(input.coupon)
-      const today = new Date()
-      if (coupon && coupon.expireDate.getTime() > today.getTime()) {
-        total -= (total * coupon.percentage) / 100
+      const couponData = await this.couponData.getCoupon(input.coupon)
+      const coupon = new Coupon(
+        couponData.code,
+        parseFloat(couponData.percentage),
+        couponData.expireDate
+      )
+      if (coupon && !coupon.isExpired()) {
+        total -= coupon.getDiscount(total)
       }
     }
     if (input.email) {
@@ -75,7 +76,12 @@ export class Checkout {
       )
     }
     total += freight
+    const today = new Date()
+    const year = today.getFullYear()
+    const sequence = await this.orderData.count()
+    const code = `${year}${new String(sequence + 1).padStart(8, '0')}`
+    await this.orderData.save({ cpf: input.cpf, total })
 
-    return { total }
+    return { code, total }
   }
 }
