@@ -2,6 +2,7 @@ import amqp from 'amqplib'
 import { Checkout } from './Checkout'
 import { ProductDataDatabase } from './ProductDataDatabase'
 import { CouponDataDatabase } from './CouponDataDatabase'
+import { OrderDataDatabase } from './OrderDataDatabase'
 
 async function init() {
   const connection = await amqp.connect('amqp://localhost')
@@ -13,7 +14,8 @@ async function init() {
     try {
       const productData = new ProductDataDatabase()
       const couponData = new CouponDataDatabase()
-      const checkout = new Checkout(productData, couponData)
+      const orderData = new OrderDataDatabase()
+      const checkout = new Checkout(productData, couponData, orderData)
       const output = await checkout.execute(input)
       console.log(output)
     } catch (error: any) {
