@@ -4,6 +4,8 @@ const prisma = new PrismaClient()
 async function main() {
   await prisma.product.deleteMany()
   await prisma.coupon.deleteMany()
+  await prisma.order.deleteMany()
+  await prisma.item.deleteMany()
 
   await prisma.product.create({
     data: {

@@ -7,6 +7,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Coupon {
+  code       String   @id @unique
+  percentage Int
+  expireDate DateTime
+}
+
 model Product {
   id          Int    @id @unique
   description String
@@ -16,10 +22,30 @@ model Product {
   length      Int
   weight      Float
   currency    String
+  items       Item[] @relation("ProductToItem")
 }
 
-model Coupon {
-  code String @unique
-  percentage Int
-  expireDate DateTime
+model Order {
+  idOrder          Int @id @default(autoincrement())
+  couponCode       String?
+  couponPercentage Float?
+  code             String?
+  cpf              String?
+  email            String?
+  createdAt        DateTime @default(now())
+  freight          Float?
+  total            Float?
+  sequence         Int?
+  items            Item[] @relation("OrderToItem")
+}
+
+model Item {
+  idOrder   Int    
+  order     Order  @relation("OrderToItem", fields: [idOrder], references: [idOrder])
+  idProduct Int 
+  product   Product @relation("ProductToItem", fields: [idProduct], references: [id]) 
+  price     Float
+  quantity  Int
+
+  @@id([idOrder, idProduct])
 }
