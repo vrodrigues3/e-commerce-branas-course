@@ -1,4 +1,4 @@
-import { FreightCalculator } from '../src/FreightCalculator'
+import { FreightCalculator } from '../src/domain/entities/FreightCalculator'
 
 test('should calculate freight', () => {
   const product = {

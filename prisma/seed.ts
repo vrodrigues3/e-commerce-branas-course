@@ -63,7 +63,7 @@ async function main() {
     data: {
       code: 'VALE20',
       percentage: 20,
-      expireDate: new Date('2023-12-31')
+      expireDate: new Date('2024-12-31')
     }
   })
 

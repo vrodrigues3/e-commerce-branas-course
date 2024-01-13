@@ -1,13 +1,15 @@
-import { Checkout } from '../src/Checkout'
-import { CouponDataDatabase } from '../src/CouponDataDatabase'
-import { GetOrderByCpf } from '../src/GetOrderByCpf'
-import { OrderDataDatabase } from '../src/OrderDataDatabase'
-import { ProductDataDatabase } from '../src/ProductDataDatabase'
+import { Checkout } from '../src/application/Checkout'
+import { CouponDataDatabase } from '../src/infra/data/CouponDataDatabase'
+import { GetOrderByCpf } from '../src/application/GetOrderByCpf'
+import { OrderDataDatabase } from '../src/infra/data/OrderDataDatabase'
+import { ProductDataDatabase } from '../src/infra/data/ProductDataDatabase'
+import { PrismaConnection } from '../src/infra/database/PrismaConnection'
 
 test('should get an order', async () => {
-  const productData = new ProductDataDatabase()
-  const couponData = new CouponDataDatabase()
-  const orderData = new OrderDataDatabase()
+  const connection = new PrismaConnection()
+  const productData = new ProductDataDatabase(connection)
+  const couponData = new CouponDataDatabase(connection)
+  const orderData = new OrderDataDatabase(connection)
   const checkout = new Checkout(productData, couponData, orderData)
   const input = {
     cpf: '168.995.350-09',

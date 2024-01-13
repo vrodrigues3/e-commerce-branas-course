@@ -1,4 +1,4 @@
-import { Coupon } from '../src/Coupon'
+import { Coupon } from '../src/domain/entities/Coupon'
 
 test('should test a coupon', async () => {
   const coupon = new Coupon('VALE20', 20, new Date('2024-10-10'))

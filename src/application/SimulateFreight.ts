@@ -1,5 +1,5 @@
-import { FreightCalculator } from './FreightCalculator'
-import { ProductData } from './ProductData'
+import { FreightCalculator } from '../domain/entities/FreightCalculator'
+import { ProductData } from '../domain/data/ProductData'
 
 type Input = {
   items: {
@@ -21,8 +21,6 @@ export class SimulateFreight {
       const product = await this.productData.getProduct(item.idProduct)
       if (product) {
         total += FreightCalculator.calculate(product)
-      } else {
-        throw new Error('Product not found')
       }
     }
     return { total }
